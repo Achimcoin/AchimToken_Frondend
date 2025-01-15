@@ -1,11 +1,8 @@
-// Updated uniswapService.js to use WETH instead of ETH directly
 import { ethers, Contract, parseEther } from 'ethers';
 import { config } from './config';
 
-export const investInToken = async (walletAddress, amount) => {
-    console.log('Starte Investition in Token...');
-    console.log(`Wallet-Adresse: ${walletAddress}`);
-    console.log(`Investitionsbetrag: ${amount} ETH`);
+export const invest = async (walletAddress, amount) => {
+    console.log('Investition gestartet...');
 
     // Verwende die neue Sepolia V3 Router-Adresse
     const routerAddress = config.uniswapRouterAddress;
@@ -29,19 +26,13 @@ export const investInToken = async (walletAddress, amount) => {
     const wethContract = new Contract(wethAddress, abi, signer);
 
     try {
-<<<<<<< HEAD
         // Wrappe ETH zu WETH
-=======
->>>>>>> f7e0c00373d51ecefd7ca5d4507761c15b5bfb4a
         console.log('Wrappe ETH zu WETH...');
         const wrapTx = await wethContract.deposit({ value: parseEther(amount.toString()) });
         await wrapTx.wait();
         console.log('ETH erfolgreich zu WETH gewrappt.');
 
-<<<<<<< HEAD
         // Genehmigung für den Uniswap Router erteilen
-=======
->>>>>>> f7e0c00373d51ecefd7ca5d4507761c15b5bfb4a
         console.log('Genehmigung für Uniswap Router erteilen...');
         const approveTx = await wethContract.approve(routerAddress, parseEther(amount.toString()));
         await approveTx.wait();
@@ -66,11 +57,7 @@ export const investInToken = async (walletAddress, amount) => {
 
         // Führe die Transaktion aus
         const tx = await contract.exactInputSingle(params, {
-<<<<<<< HEAD
             gasLimit: 600000, // Höheres Gas Limit
-=======
-            gasLimit: 500000, // Angepasstes Gas Limit
->>>>>>> f7e0c00373d51ecefd7ca5d4507761c15b5bfb4a
         });
         console.log('Transaktion gesendet, warte auf Bestätigung...', tx);
         await tx.wait();
@@ -78,12 +65,9 @@ export const investInToken = async (walletAddress, amount) => {
     } catch (error) {
         console.error('Fehler bei der Investition:', error.message || error);
         console.error('Fehler Stack Trace:', error);
-<<<<<<< HEAD
         if (error.transaction) {
             console.error('Transaktionsdetails:', error.transaction);
         }
-=======
->>>>>>> f7e0c00373d51ecefd7ca5d4507761c15b5bfb4a
         throw error;
     }
 };
