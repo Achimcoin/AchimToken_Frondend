@@ -3,8 +3,8 @@ name: Build and Deploy Frontend to Strato
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:  # Manuelle Ausführungsoption
+      - main  # Trigger auf der 'main'-Branch
+  workflow_dispatch:  # Fügt eine manuelle Ausführungsoption hinzu
 
 jobs:
   build-and-deploy:
@@ -17,33 +17,25 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '20'
+        node-version: '20'  # Aktualisierung auf Version 20
 
     - name: Upgrade npm
       run: npm install -g npm@latest
 
-    - name: Install Dependencies for Main Project
+    - name: Install Dependencies
       run: |
         rm -rf node_modules package-lock.json
-        npm install
+        npm install ajv@^8.8.2 ajv-keywords@^5.1.0 --legacy-peer-deps
+        npm install web3 --legacy-peer-deps
+        npm install --legacy-peer-deps
 
-    - name: Build Main Project
-      run: |
-        npx browserslist@latest --update-db
-        npm run build
+    - name: Build Project
+      run: npm run build
 
-    - name: Install Dependencies for Swap Widget
-      working-directory: ./src/components/SwapWidget
-      run: npm install
+    - name: Install SSH Client
+      run: sudo apt-get install -y openssh-client
 
-    - name: Build Swap Widget
-      working-directory: ./src/components/SwapWidget
-      run: |
-        npx browserslist@latest --update-db
-        export CI=false
-        npm run build
-
-    - name: Deploy Frontend and Swap Widget to Strato
+    - name: Deploy via SFTP
       env:
         FTP_HOST: ${{ secrets.STRATO_SFTP_HOST }}
         FTP_USER: ${{ secrets.STRATO_SFTP_USER }}
@@ -52,11 +44,6 @@ jobs:
         mkdir -p ~/.ssh
         echo -e "Host $FTP_HOST\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
         export SSHPASS=$FTP_PASSWORD
-        sshpass -e sftp -oBatchMode=no -o StrictHostKeyChecking=no $FTP_USER@$FTP_HOST << EOF
-          # Deploy main frontend
+        sshpass -e sftp -oBatchMode=no -o PubkeyAuthentication=no $FTP_USER@$FTP_HOST << EOF
           put -r ./build/* /
-
-          # Deploy Swap Widget
-          mkdir -p /swap || true
-          put -r ./src/components/SwapWidget/out/* /swap/
         EOF
