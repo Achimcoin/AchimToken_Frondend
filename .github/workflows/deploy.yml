@@ -3,8 +3,8 @@ name: Build and Deploy Frontend to Strato
 on:
   push:
     branches:
-      - main  # Trigger auf der 'main'-Branch
-  workflow_dispatch:  # Fügt eine manuelle Ausführungsoption hinzu
+      - main
+  workflow_dispatch:  # Manuelle Ausführungsoption
 
 jobs:
   build-and-deploy:
@@ -17,7 +17,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '20'  # Aktualisierung auf Version 20
+        node-version: '20'
 
     - name: Upgrade npm
       run: npm install -g npm@latest
@@ -29,13 +29,17 @@ jobs:
         npm install web3 --legacy-peer-deps
         npm install --legacy-peer-deps
 
-    - name: Build Project
+    - name: Build Main Project
       run: npm run build
 
-    - name: Install SSH Client
-      run: sudo apt-get install -y openssh-client
+    - name: Build and Export Swap Widget
+      working-directory: ./src/components/SwapWidget
+      run: |
+        npm install
+        npm run build
+        npm run export
 
-    - name: Deploy via SFTP
+    - name: Deploy Frontend and Swap Widget to Strato
       env:
         FTP_HOST: ${{ secrets.STRATO_SFTP_HOST }}
         FTP_USER: ${{ secrets.STRATO_SFTP_USER }}
@@ -44,6 +48,11 @@ jobs:
         mkdir -p ~/.ssh
         echo -e "Host $FTP_HOST\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
         export SSHPASS=$FTP_PASSWORD
-        sshpass -e sftp -oBatchMode=no -o PubkeyAuthentication=no $FTP_USER@$FTP_HOST << EOF
+        sshpass -e sftp -oBatchMode=no -o StrictHostKeyChecking=no $FTP_USER@$FTP_HOST << EOF
+          # Deploy main frontend
           put -r ./build/* /
+
+          # Deploy Swap Widget
+          mkdir -p /swap || true
+          put -r ./src/components/SwapWidget/out/* /swap/
         EOF
