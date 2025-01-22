@@ -22,20 +22,25 @@ jobs:
     - name: Upgrade npm
       run: npm install -g npm@latest
 
-    - name: Install Dependencies
+    - name: Install Dependencies for Main Project
       run: |
         rm -rf node_modules package-lock.json
-        npm install ajv@^8.8.2 ajv-keywords@^5.1.0 --legacy-peer-deps
-        npm install web3 --legacy-peer-deps
-        npm install --legacy-peer-deps
+        npm install
 
     - name: Build Main Project
-      run: npm run build
+      run: |
+        npx browserslist@latest --update-db
+        npm run build
 
-    - name: Build and Export Swap Widget
+    - name: Install Dependencies for Swap Widget
+      working-directory: ./src/components/SwapWidget
+      run: npm install
+
+    - name: Build Swap Widget
       working-directory: ./src/components/SwapWidget
       run: |
-        npm install
+        npx browserslist@latest --update-db
+        export CI=false
         npm run build
 
     - name: Deploy Frontend and Swap Widget to Strato
