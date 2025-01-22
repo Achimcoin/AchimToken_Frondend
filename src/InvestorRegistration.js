@@ -8,7 +8,6 @@ function InvestorRegistration() {
   const [registrationStatus, setRegistrationStatus] = useState('');
   const [searchParams] = useSearchParams();
   const referrerId = searchParams.get('ref'); // Referrer-ID aus der URL
-  const [investmentAmount, setInvestmentAmount] = useState('');
   const [isRegistered, setIsRegistered] = useState(false); // Status der Registrierung
 
   useEffect(() => {
