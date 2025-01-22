@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { connectWallet, registerInvestor, checkInvestorRegistration, getWalletBalance } from './services';
 import { useSearchParams } from 'react-router-dom';
+import SwapWidget from './components/SwapWidget';
 
 function InvestorRegistration() {
   const [walletAddress, setWalletAddress] = useState('');
@@ -12,12 +13,10 @@ function InvestorRegistration() {
 
   useEffect(() => {
     if (walletAddress) {
-      // Prüfe, ob der Investor bereits registriert ist
       (async () => {
         const isInvestor = await checkInvestorRegistration(walletAddress);
         setIsRegistered(isInvestor);
 
-        // Lade den Wallet-Bestand
         const balance = await getWalletBalance(walletAddress);
         setWalletBalance(balance);
       })();
@@ -29,7 +28,6 @@ function InvestorRegistration() {
       const wallet = await connectWallet();
       setWalletAddress(wallet);
 
-      // Automatische Registrierung nach Wallet-Verbindung
       if (!isRegistered) {
         const result = await registerInvestor(wallet, referrerId);
         setRegistrationStatus(result ? 'Erfolgreich registriert' : 'Registrierung fehlgeschlagen');
@@ -57,13 +55,7 @@ function InvestorRegistration() {
         </div>
       )}
 
-      {walletAddress && isRegistered && (
-        <iframe
-          src={`https://achim.group/swap-widget?ref=${referrerId}`}
-          title="Swap Widget"
-          style={{ width: '100%', height: '600px', border: 'none', marginTop: '20px' }}
-        />
-      )}
+      {walletAddress && isRegistered && <SwapWidget referrerId={referrerId} />}
     </div>
   );
 }
