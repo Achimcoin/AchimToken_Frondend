@@ -1,25 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { connectWallet, registerInvestor, checkInvestorRegistration, getWalletBalance } from './services';
-import { investInToken } from './uniswapService';
-import { useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { SwapWidget } from "@uniswap/widgets";
+import "@uniswap/widgets/fonts.css";
+import { connectWallet, registerInvestor, checkInvestorRegistration, getWalletBalance } from "./services";
+import { useSearchParams } from "react-router-dom";
+import { Helmet } from "react-helmet";
+
+// Uniswap Widget-Konfiguration
+const JSON_RPC_URL = "https://mainnet.infura.io/v3/6d1c7156ace64a7898ae5c5338286545";
+const TOKEN_LIST = "https://swap.achim.group/tokens.json";
 
 function InvestorRegistration() {
-  const [walletAddress, setWalletAddress] = useState('');
-  const [walletBalance, setWalletBalance] = useState('');
-  const [registrationStatus, setRegistrationStatus] = useState('');
+  const [walletAddress, setWalletAddress] = useState("");
+  const [walletBalance, setWalletBalance] = useState("");
+  const [registrationStatus, setRegistrationStatus] = useState("");
   const [searchParams] = useSearchParams();
-  const referrerId = searchParams.get('ref'); // Referrer-ID aus der URL
-  const [investmentAmount, setInvestmentAmount] = useState('');
-  const [isRegistered, setIsRegistered] = useState(false); // Status der Registrierung
+  const referrerId = searchParams.get("ref");
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [locale, setLocale] = useState("en-US");
 
   useEffect(() => {
     if (walletAddress) {
-      // Prüfe, ob der Investor bereits registriert ist
       (async () => {
         const isInvestor = await checkInvestorRegistration(walletAddress);
         setIsRegistered(isInvestor);
 
-        // Lade den Wallet-Bestand
         const balance = await getWalletBalance(walletAddress);
         setWalletBalance(balance);
       })();
@@ -31,81 +35,74 @@ function InvestorRegistration() {
     if (wallet) {
       setWalletAddress(wallet);
     } else {
-      setWalletAddress('Verbindung fehlgeschlagen');
+      alert("Fehler beim Verbinden der Wallet.");
     }
   };
 
   const handleRegisterInvestor = async () => {
     if (!walletAddress) {
-      alert('Bitte verbinde zuerst deine Wallet.');
+      alert("Bitte verbinde zuerst deine Wallet.");
       return;
     }
     if (!referrerId) {
-      alert('Kein Referrer gefunden. Bitte nutze einen gültigen Referral-Link.');
+      alert("Kein Referrer gefunden. Bitte nutze einen gültigen Referral-Link.");
       return;
     }
     try {
       await registerInvestor(walletAddress, referrerId);
-      setRegistrationStatus('Erfolgreich als Investor registriert!');
+      setRegistrationStatus("Erfolgreich als Investor registriert!");
       setIsRegistered(true);
     } catch (error) {
-      setRegistrationStatus('Fehler bei der Registrierung.');
+      setRegistrationStatus("Fehler bei der Registrierung.");
     }
   };
 
-  const handleInvest = async () => {
-    console.log('Investition gestartet...');
-    if (!walletAddress) {
-        alert('Bitte verbinde zuerst deine Wallet.');
-        console.log('Fehler: Wallet nicht verbunden');
-        return;
-    }
-    if (!investmentAmount) {
-        alert('Bitte gib einen Betrag ein.');
-        console.log('Fehler: Kein Investitionsbetrag eingegeben');
-        return;
-    }
-    console.log(`Investitionsbetrag: ${investmentAmount} ETH`);
-    try {
-        await investInToken(walletAddress, investmentAmount);
-        alert('Investition erfolgreich!');
-        console.log('Investition erfolgreich abgeschlossen');
-    } catch (error) {
-        console.error('Fehler bei der Investition:', error);
-        alert('Fehler bei der Investition.');
-    }
-  };
-
+  const handleLocaleChange = (e) => setLocale(e.target.value);
 
   return (
-    <div style={{ textAlign: 'center', marginTop: '50px' }}>
+    <div style={{ textAlign: "center", marginTop: "50px" }}>
+      <Helmet>
+        <title>Achimcoin</title>
+        <meta name="description" content="Investieren Sie jetzt in Dubais Zukunft!" />
+      </Helmet>
+
       <h1>Investorregistrierung</h1>
-      <button onClick={handleConnectWallet} style={{ padding: '10px 20px', fontSize: '16px', margin: '10px' }}>
-        Mit MetaMask verbinden
-      </button>
-      {walletAddress && <p>Verbunden mit Wallet: {walletAddress}</p>}
+
+      <div>
+        <label>
+          Sprache:
+          <select value={locale} onChange={handleLocaleChange} style={{ marginLeft: "10px", padding: "5px" }}>
+            <option value="en-US">English</option>
+            <option value="de-DE">Deutsch</option>
+          </select>
+        </label>
+      </div>
+
+      {!walletAddress ? (
+        <button onClick={handleConnectWallet} style={{ padding: "10px 20px", fontSize: "16px", margin: "10px" }}>
+          Mit Wallet verbinden
+        </button>
+      ) : (
+        <p>Verbunden mit Wallet: {walletAddress}</p>
+      )}
       {walletBalance && <p>ETH-Bestand: {walletBalance} ETH</p>}
 
       {!isRegistered ? (
-        <div style={{ marginTop: '20px' }}>
-          <button onClick={handleRegisterInvestor} style={{ padding: '10px 20px', fontSize: '16px' }}>
+        <div style={{ marginTop: "20px" }}>
+          <button onClick={handleRegisterInvestor} style={{ padding: "10px 20px", fontSize: "16px" }}>
             Als Investor registrieren
           </button>
           {registrationStatus && <p>{registrationStatus}</p>}
         </div>
       ) : (
-        <div style={{ marginTop: '20px' }}>
-          <h2>Investieren</h2>
-          <input
-            type="number"
-            placeholder="Betrag in ETH"
-            value={investmentAmount}
-            onChange={(e) => setInvestmentAmount(e.target.value)}
-            style={{ padding: '10px', fontSize: '16px', margin: '10px' }}
-          />
-          <button onClick={handleInvest} style={{ padding: '10px 20px', fontSize: '16px' }}>
-            In AchimCoin investieren
-          </button>
+        <div style={{ marginTop: "20px" }}>
+          <div style={{ width: "420px", height: "500px", margin: "0 auto" }}>
+            <SwapWidget
+              jsonRpcEndpoint={JSON_RPC_URL}
+              tokenList={TOKEN_LIST}
+              locale={locale}
+            />
+          </div>
         </div>
       )}
     </div>
