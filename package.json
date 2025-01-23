@@ -21,7 +21,7 @@
     "react-helmet": "^6.1.0",
     "typescript": "^5.1.0",
 	"jotai": "^1.10.0",
-	"jotai-immer": "^1.0.0"
+	"jotai-immer": "^0.0.0"
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.0.0",
