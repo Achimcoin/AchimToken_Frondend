@@ -15,7 +15,7 @@
     "dotenv": "^16.0.3",
     "@uniswap/widgets": "^1.0.0",
     "@web3-react/core": "^6.1.9",
-    "@web3-react/metamask": "^6.0.9",
+    "@web3-react/metamask": "^6.0.0",
     "@web3-react/walletconnect": "^6.0.9",
     "react-icons": "^4.4.0",
     "react-helmet": "^6.1.0",
