@@ -61,4 +61,12 @@ function Connector({ web3Connector }: { web3Connector: Web3Connector }) {
   );
 }
 
-export default Connector;
+export default function Connectors() {
+  return (
+    <div className={styles.connectors}>
+      {connectors.map((web3Connector, index) => (
+        <Connector key={index} web3Connector={web3Connector} />
+      ))}
+    </div>
+  );
+}
