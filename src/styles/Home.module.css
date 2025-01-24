@@ -4,10 +4,10 @@
 
 .i18n {
   align-items: center;
-  display: flex;
-  justify-content: flex-end;
   column-gap: 0.5rem;
+  display: flex;
   height: 2rem;
+  justify-content: flex-end;
 }
 
 .main {

@@ -1,49 +1,37 @@
-name: Build and Deploy Frontend to Strato
+name: Deploy React App to GitHub Pages
 
 on:
   push:
     branches:
-      - main  # Trigger auf der 'main'-Branch
-  workflow_dispatch:  # Fügt eine manuelle Ausführungsoption hinzu
+      - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
+    - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Node.js
+    - name: Install Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '20'  # Aktualisierung auf Version 20
+        node-version: 16
 
-    - name: Upgrade npm
-      run: npm install -g npm@latest
+    - name: Install dependencies
+      run: npm install
 
-    - name: Install Dependencies
-      run: |
-        rm -rf node_modules package-lock.json
-        npm install ajv@^8.8.2 ajv-keywords@^5.1.0 --legacy-peer-deps
-        npm install web3 --legacy-peer-deps
-        npm install --legacy-peer-deps
-
-    - name: Build Project
+    - name: Build project
       run: npm run build
 
-    - name: Install SSH Client
-      run: sudo apt-get install -y openssh-client
-
-    - name: Deploy via SFTP
+    - name: Deploy to Strato
       env:
         FTP_HOST: ${{ secrets.STRATO_SFTP_HOST }}
         FTP_USER: ${{ secrets.STRATO_SFTP_USER }}
         FTP_PASSWORD: ${{ secrets.STRATO_SFTP_PASSWORD }}
       run: |
-        mkdir -p ~/.ssh
-        echo -e "Host $FTP_HOST\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
         export SSHPASS=$FTP_PASSWORD
-        sshpass -e sftp -oBatchMode=no -o PubkeyAuthentication=no $FTP_USER@$FTP_HOST << EOF
+        sshpass -e sftp -oBatchMode=no -o StrictHostKeyChecking=no $FTP_USER@$FTP_HOST << EOF
+          mkdir -p / || true
           put -r ./build/* /
         EOF
