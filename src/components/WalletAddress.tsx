@@ -1,28 +1,58 @@
-import React from 'react';
-import { saveWalletAddress } from '../utils/api'; // Importiere die Funktion
+import React, { useState } from 'react';
 
-const connectWallet = async (): Promise<string | null> => {
-  if (typeof window !== 'undefined' && (window as any).ethereum) {
+const WalletAddress: React.FC = () => {
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+
+  // Funktion für die Wallet-Verbindung
+  const connectWallet = async () => {
+    if (typeof window !== 'undefined' && (window as any).ethereum) {
+      try {
+        const accounts = await (window as any).ethereum.request({
+          method: 'eth_requestAccounts',
+        });
+        const address = accounts[0];
+        console.log('Verbunden mit Wallet:', address);
+        setWalletAddress(address);
+
+        // API-Aufruf zum Speichern der Wallet-Adresse
+        await saveWalletAddress(address);
+      } catch (error) {
+        console.error('Fehler beim Verbinden mit der Wallet:', error);
+      }
+    } else {
+      alert('Bitte MetaMask installieren!');
+    }
+  };
+
+  // Funktion zum Speichern der Wallet-Adresse in der API
+  const saveWalletAddress = async (walletAddress: string) => {
     try {
-      const accounts = await (window as any).ethereum.request({
-        method: 'eth_requestAccounts',
+      const response = await fetch('https://api.achim.group/api/investor/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          walletAddress,
+          referrerId: null, // Null, wenn keine Referrer-ID übergeben wird
+        }),
       });
 
-      const walletAddress = accounts[0];
-      console.log('Verbunden mit Wallet:', walletAddress);
+      if (!response.ok) {
+        throw new Error(`Fehler beim Speichern: ${response.statusText}`);
+      }
 
-      // API-Aufruf zur Registrierung
-      await saveWalletAddress(walletAddress);
-
-      return walletAddress;
+      const data = await response.json();
+      console.log('API-Antwort:', data);
     } catch (error) {
-      console.error('Fehler beim Verbinden mit der Wallet:', error);
-      return null;
+      console.error('Fehler beim API-Aufruf:', error);
     }
-  } else {
-    alert('Bitte MetaMask installieren!');
-    return null;
-  }
+  };
+
+  return (
+    <div>
+      <button onClick={connectWallet}>Mit Wallet verbinden</button>
+      {walletAddress && <p>Verbunden mit: {walletAddress}</p>}
+    </div>
+  );
 };
 
-export default connectWallet;
+export default WalletAddress; // Standardexport der gesamten Komponente
