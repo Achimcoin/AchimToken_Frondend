@@ -1,30 +1,37 @@
 import React, { useState } from 'react';
 
+// Funktion für die Wallet-Verbindung
+export const connectWallet = async (): Promise<string | null> => {
+  if (typeof window !== 'undefined' && (window as any).ethereum) {
+    try {
+      const accounts = await (window as any).ethereum.request({
+        method: 'eth_requestAccounts',
+      });
+      return accounts[0];
+    } catch (error) {
+      console.error('Fehler beim Verbinden mit der Wallet:', error);
+      return null;
+    }
+  } else {
+    alert('Bitte MetaMask installieren!');
+    return null;
+  }
+};
+
+// Hauptkomponente
 const WalletAddress: React.FC = () => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
 
-  // Funktion für die Wallet-Verbindung
-  const connectWallet = async () => {
-    if (typeof window !== 'undefined' && (window as any).ethereum) {
-      try {
-        const accounts = await (window as any).ethereum.request({
-          method: 'eth_requestAccounts',
-        });
-        const address = accounts[0];
-        console.log('Verbunden mit Wallet:', address);
-        setWalletAddress(address);
+  const handleConnect = async () => {
+    const address = await connectWallet();
+    if (address) {
+      setWalletAddress(address);
 
-        // API-Aufruf zum Speichern der Wallet-Adresse
-        await saveWalletAddress(address);
-      } catch (error) {
-        console.error('Fehler beim Verbinden mit der Wallet:', error);
-      }
-    } else {
-      alert('Bitte MetaMask installieren!');
+      // API-Aufruf zum Speichern der Wallet-Adresse
+      await saveWalletAddress(address);
     }
   };
 
-  // Funktion zum Speichern der Wallet-Adresse in der API
   const saveWalletAddress = async (walletAddress: string) => {
     try {
       const response = await fetch('https://api.achim.group/api/investor/register', {
@@ -32,7 +39,7 @@ const WalletAddress: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           walletAddress,
-          referrerId: null, // Null, wenn keine Referrer-ID übergeben wird
+          referrerId: null, // Null, wenn keine Referrer-ID vorhanden ist
         }),
       });
 
@@ -49,10 +56,10 @@ const WalletAddress: React.FC = () => {
 
   return (
     <div>
-      <button onClick={connectWallet}>Mit Wallet verbinden</button>
+      <button onClick={handleConnect}>Mit Wallet verbinden</button>
       {walletAddress && <p>Verbunden mit: {walletAddress}</p>}
     </div>
   );
 };
 
-export default WalletAddress; // Standardexport der gesamten Komponente
+export default WalletAddress; // Standardexport der Komponente
