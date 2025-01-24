@@ -1,13 +1,20 @@
 import React from 'react';
+import { saveWalletAddress } from '../utils/api'; // Importiere die Funktion
 
-// Funktion für die Wallet-Verbindung
-export const connectWallet = async (): Promise<string | null> => {
+const connectWallet = async (): Promise<string | null> => {
   if (typeof window !== 'undefined' && (window as any).ethereum) {
     try {
       const accounts = await (window as any).ethereum.request({
         method: 'eth_requestAccounts',
       });
-      return accounts[0]; // Gibt die erste Wallet-Adresse zurück
+
+      const walletAddress = accounts[0];
+      console.log('Verbunden mit Wallet:', walletAddress);
+
+      // API-Aufruf zur Registrierung
+      await saveWalletAddress(walletAddress);
+
+      return walletAddress;
     } catch (error) {
       console.error('Fehler beim Verbinden mit der Wallet:', error);
       return null;
@@ -18,9 +25,4 @@ export const connectWallet = async (): Promise<string | null> => {
   }
 };
 
-// Hauptkomponente: Wallet-Adresse (falls benötigt, bleibt jedoch leer)
-const WalletAddress: React.FC = () => {
-  return null; // Diese Komponente bleibt leer, da die Logik über connectWallet erfolgt
-};
-
-export default WalletAddress;
+export default connectWallet;
