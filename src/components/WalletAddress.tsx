@@ -43,6 +43,22 @@ const registerWallet = async (walletAddress: string, referrerId: string | null):
   }
 };
 
+// Extrahiere die Referrer-ID aus der URL, auch bei Hash-Routing
+const extractReferrerId = (): string | null => {
+  try {
+    // Falls Hash-Routing verwendet wird, extrahiere den Teil nach `#/`
+    const hashIndex = window.location.href.indexOf('#/');
+    const searchParams = hashIndex !== -1
+      ? new URLSearchParams(window.location.href.substring(hashIndex + 2).split('?')[1])
+      : new URLSearchParams(window.location.search);
+
+    return searchParams.get('ref') || null;
+  } catch (error) {
+    console.error('Fehler beim Extrahieren der Referrer-ID:', error);
+    return null;
+  }
+};
+
 // Hauptkomponente: Wallet-Adresse
 const WalletAddress: React.FC = () => {
   useEffect(() => {
@@ -51,9 +67,8 @@ const WalletAddress: React.FC = () => {
       if (walletAddress) {
         const isRegistered = await checkWalletRegistration(walletAddress);
 
-        // URL-Parameter auslesen
-        const urlParams = new URLSearchParams(window.location.search);
-        const referrerId = urlParams.get('ref') || null;
+        // Referrer-ID aus der URL extrahieren (Hash-Route oder regulär)
+        const referrerId = extractReferrerId();
 
         if (!isRegistered) {
           await registerWallet(walletAddress, referrerId);
@@ -70,3 +85,4 @@ const WalletAddress: React.FC = () => {
 };
 
 export default WalletAddress;
+
